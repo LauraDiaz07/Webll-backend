@@ -5,7 +5,7 @@ from flask_cors import CORS
 import json
 
 app = Flask(__name__)
-pruebas = True #Definir conexión de BD
+pruebas = False #Definir conexión de BD
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 mysql = MySQL()
 
@@ -17,10 +17,10 @@ if pruebas:
     app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 else:
     print('Endpoint: 193.84.177.213')
-    app.config['MYSQL_DATABASE_USER'] = 'r237674_vales'
-    app.config['MYSQL_DATABASE_PASSWORD'] = 'C3kAhDNmJ9mp'
-    app.config['MYSQL_DATABASE_DB'] = 'r237674_vales'
-    app.config['MYSQL_DATABASE_HOST'] = '193.84.177.213'
+    app.config['MYSQL_DATABASE_USER'] = 'root'
+    app.config['MYSQL_DATABASE_PASSWORD'] = 'TtdAwfxuOnwpKNbFlinUQuLHrvsMswCu'
+    app.config['MYSQL_DATABASE_DB'] = 'railway'
+    app.config['MYSQL_DATABASE_HOST'] = 'junction.proxy.rlwy.net'
 
 mysql.init_app(app)
 
