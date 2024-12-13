@@ -1,8 +1,8 @@
-from flask import Flask, request
-from flask import jsonify
-from flaskext.mysql import MySQL
+from flask import Flask, request, jsonify
 from flask_cors import CORS
+from flask_mysqldb import MySQL
 import json
+import os
 
 app = Flask(__name__)
 pruebas = False #Definir conexión de BD
@@ -27,12 +27,10 @@ mysql.init_app(app)
 # Eliminar vale especifico
 @app.route('/api/deleteVales/<id>', methods=['POST'])
 def deleteVales(id):
-    conn = mysql.connect()
-    cursor = conn.cursor()
+    cursor = mysql.connection.cursor()
     cursor.execute("DELETE FROM ljeans.vales WHERE id_vale=%s;",id)
-    conn.commit()
-
-    response = {'message': 'Eliminado con exito'}
+    mysql.connection.commit()
+    response = {'message': 'Eliminado con éxito'}
     return jsonify(response)
 
 # Modificar vale especifico
@@ -45,7 +43,7 @@ def editVales():
         data = json.loads(request.data.decode())
         print(data)
 
-        conn = mysql.connect()
+        conn = mysql.connection
         cursor = conn.cursor()
         cursor.execute("UPDATE ljeans.vales SET tipo_vale=%s, id_distribuidor=%s, monto_vale=%s, fecha_limite=%s, cantidad=%s WHERE id_vale=%s;",(data["tipo_vale"],data["clave_distribuidor"],data["monto_vale"],data["fecha_limite"],data["cantidad"],data["id_vale"]))
         conn.commit()
@@ -65,7 +63,7 @@ def addVales():
         # Decodificar datos
         data = json.loads(request.data.decode())
         
-        conn = mysql.connect()
+        conn = mysql.connection
         cursor = conn.cursor()
         cursor.execute("INSERT INTO ljeans.vales (tipo_vale, id_distribuidor, monto_vale, fecha_limite, cantidad) VALUES(%s, %s, %s, %s, %s);",(data["tipo_vale"],data["id_ditribuidor"],data["monto_vale"],data["fecha_limite"],data["cantidad"]))
         conn.commit()
@@ -79,7 +77,7 @@ def addVales():
 # Mostrar vales activos
 @app.route('/api/getVales', methods=['GET'])
 def getVales():
-    conn = mysql.connect()
+    conn = mysql.connection
     cursor = conn.cursor()
 
     cursor.execute("SELECT vales.*,distribuidores.nombre_distribuidor,distribuidores.apellidos_distribuidor FROM vales,distribuidores WHERE vales.id_distribuidor = distribuidores.id_distribuidor;")
@@ -94,8 +92,8 @@ def getVales():
 # Mostrar distribuidores activos
 @app.route('/api/getDistribuidores', methods=['GET'])
 def getDistribuidores():
-    conn = mysql.connect()
-    cursor =conn.cursor()
+    conn = mysql.connection
+    cursor = conn.cursor()
 
     cursor.execute("SELECT distribuidores.id_distribuidor,distribuidores.nombre_distribuidor,distribuidores.apellidos_distribuidor from distribuidores WHERE estado = 'A'")
     data = cursor.fetchall()
