@@ -7,31 +7,36 @@ import os
 app = Flask(__name__)
 pruebas = False #Definir conexión de BD
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
-mysql = MySQL()
+
 
 if pruebas:
     print('Endpoint: localhost')
-    app.config['MYSQL_DATABASE_USER'] = 'root'
-    app.config['MYSQL_DATABASE_PASSWORD'] = ''
-    app.config['MYSQL_DATABASE_DB'] = 'ljeans'
-    app.config['MYSQL_DATABASE_HOST'] = 'localhost'
+    app.config['MYSQL_USER'] = 'root'
+    app.config['MYSQL_PASSWORD'] = ''
+    app.config['MYSQL_DB'] = 'ljeans'
+    app.config['MYSQL_HOST'] = 'localhost'
+    app.config['MYSQL_PORT'] = 3306
 else:
-    print('Endpoint: 193.84.177.213')
-    app.config['MYSQL_DATABASE_USER'] = 'root'
-    app.config['MYSQL_DATABASE_PASSWORD'] = 'TtdAwfxuOnwpKNbFlinUQuLHrvsMswCu'
-    app.config['MYSQL_DATABASE_DB'] = 'railway'
-    app.config['MYSQL_DATABASE_HOST'] = 'junction.proxy.rlwy.net'
+    app.config['MYSQL_HOST'] = 'junction.proxy.rlwy.net'
+    app.config['MYSQL_USER'] = 'root'
+    app.config['MYSQL_PASSWORD'] = 'TtdAwfxuOnwpKNbFlinUQuLHrvsMswCu'
+    app.config['MYSQL_DB'] = 'railway'
+    app.config['MYSQL_PORT'] = 33070
+    app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
-mysql.init_app(app)
+mysql = MySQL(app)
 
 # Eliminar vale especifico
 @app.route('/api/deleteVales/<id>', methods=['POST'])
 def deleteVales(id):
-    cursor = mysql.connection.cursor()
-    cursor.execute("DELETE FROM ljeans.vales WHERE id_vale=%s;",id)
-    mysql.connection.commit()
-    response = {'message': 'Eliminado con éxito'}
-    return jsonify(response)
+    try:
+        cursor = mysql.connection.cursor()
+        cursor.execute("DELETE FROM ljeans.vales WHERE id_vale=%s;",id)
+        mysql.connection.commit()
+        response = {'message': 'Eliminado con éxito'}
+        return jsonify(response)
+    except OperationalError as e:
+        return jsonify({"error": str(e)}), 500
 
 # Modificar vale especifico
 @app.route('/api/editVales', methods=['POST'])
@@ -77,32 +82,40 @@ def addVales():
 # Mostrar vales activos
 @app.route('/api/getVales', methods=['GET'])
 def getVales():
-    conn = mysql.connection
-    cursor = conn.cursor()
+    try:
+        conn = mysql.connection
+        cursor = conn.cursor()
 
-    cursor.execute("SELECT vales.*,distribuidores.nombre_distribuidor,distribuidores.apellidos_distribuidor FROM vales,distribuidores WHERE vales.id_distribuidor = distribuidores.id_distribuidor;")
-    data = cursor.fetchall()
-    if data != None:
-        response = jsonify(data)
-    else:
-        response = ""
-        
-    return response
+        cursor.execute("SELECT vales.*,distribuidores.nombre_distribuidor,distribuidores.apellidos_distribuidor FROM vales,distribuidores WHERE vales.id_distribuidor = distribuidores.id_distribuidor;")
+        data = cursor.fetchall()
+        cursor.close()
+        if data != None:
+            response = jsonify(data)
+        else:
+            response = ""
+            
+        return response
+    except OperationalError as e:
+        return jsonify({"error": str(e)}), 500
 
 # Mostrar distribuidores activos
 @app.route('/api/getDistribuidores', methods=['GET'])
 def getDistribuidores():
-    conn = mysql.connection
-    cursor = conn.cursor()
+    try:
 
-    cursor.execute("SELECT distribuidores.id_distribuidor,distribuidores.nombre_distribuidor,distribuidores.apellidos_distribuidor from distribuidores WHERE estado = 'A'")
-    data = cursor.fetchall()
-    if data != None:
-        response = jsonify(data)
-    else:
-        response = ""
-        
-    return response
+        cursor = mysql.connection.cursor()
+
+        cursor.execute("SELECT distribuidores.id_distribuidor,distribuidores.nombre_distribuidor,distribuidores.apellidos_distribuidor from distribuidores WHERE estado = 'A'")
+        data = cursor.fetchall()
+        cursor.close()
+        if data != None:
+            response = jsonify(data)
+        else:
+            response = ""
+            
+        return response
+    except OperationalError as e:
+        return jsonify({"error": str(e)}), 500
 
 # Home
 @app.route('/')
