@@ -1,34 +1,23 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_mysqldb import MySQL
+from dotenv import load_dotenv
 import json
 import os
 
+# Cargar las variables de entorno
+load_dotenv()
+
 app = Flask(__name__)
-pruebas = False #Definir conexión de BD
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-
-if pruebas:
-    print('Endpoint: localhost')
-    app.config['MYSQL_USER'] = 'root'
-    app.config['MYSQL_PASSWORD'] = ''
-    app.config['MYSQL_DB'] = 'ljeans'
-    app.config['MYSQL_HOST'] = 'localhost'
-    app.config['MYSQL_PORT'] = 3306
-else:
-    # app.config['MYSQL_HOST'] = os.getenv('MYSQL_HOST')
-    # app.config['MYSQL_USER'] = os.getenv('MYSQL_USER')
-    # app.config['MYSQL_PASSWORD'] = os.getenv('MYSQL_PASSWORD')
-    # app.config['MYSQL_DB'] = os.getenv('MYSQL_DB')
-    # app.config['MYSQL_PORT'] = int(os.getenv('MYSQL_PORT', 3306))
-    # app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
-    app.config['MYSQL_HOST'] = 'junction.proxy.rlwy.net'
-    app.config['MYSQL_USER'] = 'root'
-    app.config['MYSQL_PASSWORD'] = 'TtdAwfxuOnwpKNbFlinUQuLHrvsMswCu'
-    app.config['MYSQL_DB'] = 'railway'
-    app.config['MYSQL_PORT'] = 33070
-    app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
+# Configuración de MySQL desde variables de entorno
+app.config['MYSQL_HOST'] = os.getenv('MYSQL_HOST', 'localhost')
+app.config['MYSQL_USER'] = os.getenv('MYSQL_USER', 'root')
+app.config['MYSQL_PASSWORD'] = os.getenv('MYSQL_PASSWORD', '')
+app.config['MYSQL_DB'] = os.getenv('MYSQL_DB', 'ljeans')
+app.config['MYSQL_PORT'] = int(os.getenv('MYSQL_PORT', 3306))
+app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
 mysql = MySQL(app)
 
@@ -132,4 +121,4 @@ def home():
     return jsonify(response)
 
 if __name__ == '__main__':
-    app.run(debug=True, port=os.getenv("PORT", default=5000))
+    app.run(debug=bool(os.getenv('FLASK_DEBUG', True)), port=os.getenv('PORT', 5000))
